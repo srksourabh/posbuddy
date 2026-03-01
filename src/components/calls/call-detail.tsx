@@ -14,6 +14,7 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { Separator } from "@/components/ui/separator";
+import { toast } from "sonner";
 import { StatusBadge } from "@/components/calls/status-badge";
 import { AssignDialog } from "@/components/calls/assign-dialog";
 import {
@@ -54,7 +55,12 @@ export function CallDetail({ call }: CallDetailProps) {
 
   const handleStatusChange = (newStatus: string) => {
     startTransition(async () => {
-      await updateCallStatus(call.call_id, newStatus);
+      const result = await updateCallStatus(call.call_id, newStatus);
+      if (result.error) {
+        toast.error(result.error);
+      } else {
+        toast.success(`Status changed to ${newStatus}`);
+      }
       router.refresh();
     });
   };

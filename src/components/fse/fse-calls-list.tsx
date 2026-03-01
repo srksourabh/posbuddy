@@ -5,6 +5,7 @@ import { format } from "date-fns";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Phone, MapPin } from "lucide-react";
+import { useRealtimeCalls } from "@/hooks/use-realtime-calls";
 import type { FseCall } from "@/app/(fse)/my-calls/actions";
 
 interface FseCallsListProps {
@@ -13,6 +14,7 @@ interface FseCallsListProps {
 
 export function FseCallsList({ calls }: FseCallsListProps) {
   const router = useRouter();
+  useRealtimeCalls();
 
   if (calls.length === 0) {
     return (

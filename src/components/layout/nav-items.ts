@@ -8,6 +8,7 @@ import {
   Landmark,
   Smartphone,
   FileSpreadsheet,
+  Wrench,
   type LucideIcon,
 } from "lucide-react";
 
@@ -75,6 +76,12 @@ export const navGroups: NavGroup[] = [
         title: "Device Models",
         url: "/master/devices",
         icon: Smartphone,
+        roles: ["Back Office", "Management"],
+      },
+      {
+        title: "Call Types",
+        url: "/master/call-types",
+        icon: Wrench,
         roles: ["Back Office", "Management"],
       },
       {

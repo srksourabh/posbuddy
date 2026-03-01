@@ -3,6 +3,7 @@
 import { useRouter } from "next/navigation";
 import { useState } from "react";
 import { format } from "date-fns";
+import { useRealtimeCalls } from "@/hooks/use-realtime-calls";
 import {
   Table,
   TableBody,
@@ -26,6 +27,7 @@ interface CallsTableProps {
 
 export function CallsTable({ calls, total, page, pageSize }: CallsTableProps) {
   const router = useRouter();
+  useRealtimeCalls();
   const [selected, setSelected] = useState<number[]>([]);
   const [assignOpen, setAssignOpen] = useState(false);
 

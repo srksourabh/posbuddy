@@ -12,6 +12,7 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { toast } from "sonner";
 import { closeCall } from "@/app/(fse)/my-calls/actions";
 
 interface ClosureFormProps {
@@ -77,7 +78,9 @@ export function ClosureForm({ callId, onClose, onClosed }: ClosureFormProps) {
 
       if (result.error) {
         setError(result.error);
+        toast.error(result.error);
       } else {
+        toast.success("Call closed successfully");
         onClosed();
       }
     });

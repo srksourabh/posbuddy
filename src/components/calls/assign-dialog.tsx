@@ -11,6 +11,7 @@ import {
 } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { toast } from "sonner";
 import {
   fetchStaffForAssignment,
   assignCall,
@@ -79,7 +80,13 @@ export function AssignDialog({
 
       if (result.error) {
         setError(result.error);
+        toast.error(result.error);
       } else {
+        toast.success(
+          callIds.length === 1
+            ? "Call assigned successfully"
+            : `${callIds.length} calls assigned`
+        );
         router.refresh();
         onAssigned();
       }
