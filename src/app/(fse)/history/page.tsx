@@ -1,0 +1,55 @@
+import { FseCallsList } from "@/components/fse/fse-calls-list";
+import { createClient } from "@/lib/supabase/server";
+
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+type AnyQuery = any;
+
+export default async function HistoryPage() {
+  const supabase = await createClient();
+
+  const { data }: AnyQuery = await supabase
+    .from("calls")
+    .select(
+      `
+      *,
+      customers ( customer_name ),
+      call_types ( call_type_name ),
+      acquiring_banks ( bank_name ),
+      device_models ( model_name )
+    `
+    )
+    .in("call_status", ["Closed", "Cancelled"])
+    .order("updated_at", { ascending: false })
+    .limit(50);
+
+  const rows = (data ?? []) as Record<string, unknown>[];
+
+  const calls = rows.map((row) => {
+    const customers = row.customers as { customer_name: string } | null;
+    const call_types = row.call_types as { call_type_name: string } | null;
+    const acquiring_banks = row.acquiring_banks as { bank_name: string } | null;
+    const device_models = row.device_models as { model_name: string } | null;
+
+    const callData = Object.fromEntries(
+      Object.entries(row).filter(
+        ([k]) =>
+          !["customers", "call_types", "acquiring_banks", "device_models"].includes(k)
+      )
+    );
+
+    return {
+      ...callData,
+      customer_name: customers?.customer_name,
+      call_type_name: call_types?.call_type_name,
+      bank_name: acquiring_banks?.bank_name,
+      device_model_name: device_models?.model_name,
+    };
+  });
+
+  return (
+    <div className="space-y-4">
+      <h1 className="text-xl font-bold">History</h1>
+      <FseCallsList calls={calls as Parameters<typeof FseCallsList>[0]["calls"]} />
+    </div>
+  );
+}
