@@ -1,66 +1,118 @@
+import { Suspense } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Skeleton } from "@/components/ui/skeleton";
+import {
+  fetchDashboardStats,
+  fetchCustomerBreakdown,
+  fetchRecentActivity,
+} from "./actions";
+import { DashboardCharts } from "@/components/dashboard/dashboard-charts";
+import { RecentActivity } from "@/components/dashboard/recent-activity";
+import { Phone, Clock, CheckCircle, AlertTriangle } from "lucide-react";
 
 export default function DashboardPage() {
   return (
     <div className="space-y-6">
-      <h1 className="text-3xl font-bold">Dashboard</h1>
+      <h1 className="text-2xl font-bold tracking-tight">Dashboard</h1>
 
-      <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
-        <Card>
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Total Calls</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold">0</div>
-            <p className="text-xs text-muted-foreground">No calls imported yet</p>
-          </CardContent>
-        </Card>
+      <Suspense fallback={<StatsSkeleton />}>
+        <StatsSection />
+      </Suspense>
 
-        <Card>
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Pending</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold text-status-pending">0</div>
-            <p className="text-xs text-muted-foreground">Awaiting assignment</p>
-          </CardContent>
-        </Card>
+      <div className="grid gap-6 lg:grid-cols-2">
+        <Suspense fallback={<Skeleton className="h-80" />}>
+          <ChartsSection />
+        </Suspense>
 
-        <Card>
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">In Progress</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold text-status-in-progress">0</div>
-            <p className="text-xs text-muted-foreground">FSE on-site</p>
-          </CardContent>
-        </Card>
-
-        <Card>
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Closed</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold text-status-closed">0</div>
-            <p className="text-xs text-muted-foreground">Completed calls</p>
-          </CardContent>
-        </Card>
+        <Suspense fallback={<Skeleton className="h-80" />}>
+          <ActivitySection />
+        </Suspense>
       </div>
+    </div>
+  );
+}
 
-      <Card>
-        <CardHeader>
-          <CardTitle>Getting Started</CardTitle>
-        </CardHeader>
-        <CardContent className="text-sm text-muted-foreground space-y-2">
-          <p>Welcome to POSBUDDY. To begin operations:</p>
-          <ol className="list-decimal list-inside space-y-1">
-            <li>Configure column mappings for each customer under Settings</li>
-            <li>Import call data via Excel files under Import Calls</li>
-            <li>Assign calls to FSE staff</li>
-            <li>FSEs visit sites and submit closures via the mobile app</li>
-          </ol>
-        </CardContent>
-      </Card>
+async function StatsSection() {
+  const stats = await fetchDashboardStats();
+
+  const cards = [
+    {
+      title: "Total Calls",
+      value: stats.total,
+      icon: Phone,
+      desc: "All imported calls",
+    },
+    {
+      title: "Pending",
+      value: stats.pending,
+      icon: AlertTriangle,
+      desc: "Awaiting assignment",
+    },
+    {
+      title: "In Progress",
+      value: stats.assigned + stats.inProgress,
+      icon: Clock,
+      desc: `${stats.assigned} assigned, ${stats.inProgress} on-site`,
+    },
+    {
+      title: "Closed",
+      value: stats.closed,
+      icon: CheckCircle,
+      desc: `${stats.total > 0 ? Math.round((stats.closed / stats.total) * 100) : 0}% closure rate`,
+    },
+  ];
+
+  return (
+    <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
+      {cards.map((card) => (
+        <Card key={card.title}>
+          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+            <CardTitle className="text-sm font-medium">{card.title}</CardTitle>
+            <card.icon className="h-4 w-4 text-muted-foreground" />
+          </CardHeader>
+          <CardContent>
+            <div className="text-2xl font-bold">{card.value}</div>
+            <p className="text-xs text-muted-foreground">{card.desc}</p>
+          </CardContent>
+        </Card>
+      ))}
+    </div>
+  );
+}
+
+async function ChartsSection() {
+  const [stats, customerBreakdown] = await Promise.all([
+    fetchDashboardStats(),
+    fetchCustomerBreakdown(),
+  ]);
+
+  const statusData = [
+    { name: "Pending", value: stats.pending },
+    { name: "Assigned", value: stats.assigned },
+    { name: "In Progress", value: stats.inProgress },
+    { name: "Closed", value: stats.closed },
+    { name: "Cancelled", value: stats.cancelled },
+  ].filter((d) => d.value > 0);
+
+  return (
+    <DashboardCharts
+      statusData={statusData}
+      customerData={customerBreakdown}
+    />
+  );
+}
+
+async function ActivitySection() {
+  const activity = await fetchRecentActivity();
+  return <RecentActivity entries={activity} />;
+}
+
+function StatsSkeleton() {
+  return (
+    <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
+      {Array.from({ length: 4 }).map((_, i) => (
+        <Skeleton key={i} className="h-24" />
+      ))}
     </div>
   );
 }
