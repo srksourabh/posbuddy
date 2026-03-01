@@ -23,6 +23,19 @@ export default function LoginPage() {
   const [otp, setOtp] = useState("");
   const [otpSent, setOtpSent] = useState(false);
 
+  async function getRedirectPath(): Promise<string> {
+    const supabase = createClient();
+    // Use the DB helper function — works because user is now authenticated
+    const { data: department } = await supabase.rpc("get_current_staff_department");
+
+    if (!department) {
+      await supabase.auth.signOut();
+      throw new Error("No active staff record found for this account.");
+    }
+
+    return department === "FSE" ? "/my-calls" : "/dashboard";
+  }
+
   const handleEmailLogin = async (e: React.FormEvent) => {
     e.preventDefault();
     setLoading(true);
@@ -40,7 +53,13 @@ export default function LoginPage() {
       return;
     }
 
-    router.push("/dashboard");
+    try {
+      const redirectTo = await getRedirectPath();
+      router.push(redirectTo);
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "Login failed");
+      setLoading(false);
+    }
   };
 
   const handleSendOtp = async () => {
@@ -80,7 +99,13 @@ export default function LoginPage() {
       return;
     }
 
-    router.push("/dashboard");
+    try {
+      const redirectTo = await getRedirectPath();
+      router.push(redirectTo);
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "Login failed");
+      setLoading(false);
+    }
   };
 
   return (

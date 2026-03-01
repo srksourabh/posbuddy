@@ -1,12 +1,15 @@
 import { SidebarProvider, SidebarInset } from "@/components/ui/sidebar";
 import { AppSidebar } from "@/components/layout/app-sidebar";
 import { AppHeader } from "@/components/layout/app-header";
+import { requireBackOffice } from "@/lib/auth/session";
 
-export default function DashboardLayout({
+export default async function BackOfficeLayout({
   children,
 }: {
   children: React.ReactNode;
 }) {
+  await requireBackOffice();
+
   return (
     <SidebarProvider>
       <AppSidebar />

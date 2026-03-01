@@ -15,9 +15,22 @@ import {
   SidebarFooter,
 } from "@/components/ui/sidebar";
 import { navGroups } from "./nav-items";
+import { useCurrentUser } from "@/hooks/use-current-user";
 
 export function AppSidebar() {
   const pathname = usePathname();
+  const { staff } = useCurrentUser();
+  const department = staff?.department ?? "";
+
+  // Filter nav groups/items by user's department
+  const filteredGroups = navGroups
+    .map((group) => ({
+      ...group,
+      items: group.items.filter(
+        (item) => !item.roles || item.roles.includes(department)
+      ),
+    }))
+    .filter((group) => group.items.length > 0);
 
   return (
     <Sidebar collapsible="icon">
@@ -33,7 +46,7 @@ export function AppSidebar() {
       </SidebarHeader>
 
       <SidebarContent>
-        {navGroups.map((group) => (
+        {filteredGroups.map((group) => (
           <SidebarGroup key={group.label}>
             <SidebarGroupLabel>{group.label}</SidebarGroupLabel>
             <SidebarGroupContent>
@@ -42,7 +55,10 @@ export function AppSidebar() {
                   <SidebarMenuItem key={item.url}>
                     <SidebarMenuButton
                       asChild
-                      isActive={pathname === item.url}
+                      isActive={
+                        pathname === item.url ||
+                        pathname.startsWith(item.url + "/")
+                      }
                       tooltip={item.title}
                     >
                       <Link href={item.url}>
