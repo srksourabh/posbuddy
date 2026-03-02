@@ -158,7 +158,29 @@ export async function importCalls(
 
   const batchId = `IMP-${Date.now()}`;
   const errors: string[] = [];
-  let imported = 0;
+  let inserted = 0;
+  let duplicates = 0;
+
+  // Collect all ticket numbers from the spreadsheet to check which already exist
+  const allTickets: string[] = [];
+  for (const row of rows) {
+    const t = getValue(row, "call_ticket_number");
+    if (t) allTickets.push(t);
+  }
+
+  // Fetch existing ticket numbers in batches to build a set
+  const existingTickets = new Set<string>();
+  const LOOKUP_BATCH = 500;
+  for (let i = 0; i < allTickets.length; i += LOOKUP_BATCH) {
+    const slice = allTickets.slice(i, i + LOOKUP_BATCH);
+    const { data: found }: AnyQuery = await supabase
+      .from("calls")
+      .select("call_ticket_number")
+      .in("call_ticket_number", slice);
+    for (const r of (found ?? []) as { call_ticket_number: string }[]) {
+      existingTickets.add(r.call_ticket_number);
+    }
+  }
 
   // Process rows in batches of 50
   const BATCH_SIZE = 50;
@@ -170,6 +192,11 @@ export async function importCalls(
       if (!ticketNumber) {
         errors.push(`Row ${i + idx + 2}: Missing ticket number`);
         return null;
+      }
+
+      // Skip duplicates
+      if (existingTickets.has(ticketNumber)) {
+        return "duplicate";
       }
 
       const callTypeName = getValue(row, "call_type");
@@ -204,20 +231,29 @@ export async function importCalls(
         source_raw_data: row,
         import_batch_id: batchId,
       };
-    }).filter((r): r is NonNullable<typeof r> => r != null);
+    });
 
-    if (callRows.length > 0) {
+    // Count and remove duplicates, then filter nulls
+    const dupsInBatch = callRows.filter((r) => r === "duplicate").length;
+    duplicates += dupsInBatch;
+
+    const newRows = callRows.filter(
+      (r): r is Exclude<NonNullable<typeof r>, string> =>
+        r != null && r !== "duplicate"
+    );
+
+    if (newRows.length > 0) {
       const { error }: AnyQuery = await (supabase.from("calls") as AnyQuery)
-        .insert(callRows);
+        .insert(newRows);
 
       if (error) {
         errors.push(`Batch ${Math.floor(i / BATCH_SIZE) + 1}: ${error.message}`);
       } else {
-        imported += callRows.length;
+        inserted += newRows.length;
       }
     }
   }
 
   revalidatePath("/calls");
-  return { imported, errors, batchId, total: rows.length };
+  return { inserted, duplicates, errors, batchId, total: rows.length };
 }

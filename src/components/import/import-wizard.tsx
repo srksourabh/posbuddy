@@ -36,7 +36,8 @@ export function ImportWizard({ customers }: ImportWizardProps) {
   const [mappings, setMappings] = useState<ColumnMapping[]>([]);
   const [existingMappings, setExistingMappings] = useState<ColumnMapping[]>([]);
   const [result, setResult] = useState<{
-    imported: number;
+    inserted: number;
+    duplicates: number;
     errors: string[];
     total: number;
   } | null>(null);
@@ -247,8 +248,11 @@ export function ImportWizard({ customers }: ImportWizardProps) {
               <div>
                 <h2 className="text-lg font-semibold">Import Complete</h2>
                 <p className="text-sm text-muted-foreground">
-                  {result.imported} of {result.total} calls imported
-                  successfully.
+                  {result.total} calls processed: {result.inserted} imported
+                  {result.duplicates > 0 &&
+                    `, ${result.duplicates} duplicates skipped`}
+                  {result.errors.length > 0 &&
+                    `, ${result.errors.length} error(s)`}
                 </p>
               </div>
             </div>
