@@ -8,13 +8,14 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { ClosureForm } from "@/components/fse/closure-form";
 import { startVisit } from "@/app/(fse)/my-calls/actions";
-import type { FseCall } from "@/app/(fse)/my-calls/actions";
+import type { FseCall, ClosureTemplateField } from "@/app/(fse)/my-calls/actions";
 
 interface FseCallDetailProps {
   call: FseCall;
+  closureTemplate?: ClosureTemplateField[];
 }
 
-export function FseCallDetail({ call }: FseCallDetailProps) {
+export function FseCallDetail({ call, closureTemplate }: FseCallDetailProps) {
   const router = useRouter();
   const [showClosure, setShowClosure] = useState(false);
   const [isPending, startTransition] = useTransition();
@@ -98,6 +99,7 @@ export function FseCallDetail({ call }: FseCallDetailProps) {
       {showClosure && (
         <ClosureForm
           callId={call.call_id}
+          templateFields={closureTemplate}
           onClose={() => setShowClosure(false)}
           onClosed={() => router.push("/my-calls")}
         />

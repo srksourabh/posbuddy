@@ -81,6 +81,32 @@ export async function startVisit(callId: number) {
   return { success: true };
 }
 
+export interface ClosureTemplateField {
+  template_field_id: number;
+  field_name: string | null;
+  field_type: string | null;
+  is_required: boolean;
+  display_order: number | null;
+  options_json: string[] | null;
+}
+
+export async function fetchClosureTemplate(
+  customerId: number
+): Promise<ClosureTemplateField[]> {
+  const supabase = await createClient();
+
+  const { data }: AnyQuery = await supabase
+    .from("closing_requirement_templates")
+    .select(
+      "template_field_id, field_name, field_type, is_required, display_order, options_json"
+    )
+    .eq("customer_id", customerId)
+    .eq("is_active", true)
+    .order("display_order");
+
+  return (data ?? []) as ClosureTemplateField[];
+}
+
 export async function closeCall(
   callId: number,
   closureData: {
@@ -90,26 +116,49 @@ export async function closeCall(
     visitOutTime: string;
     gpsLatitude?: number;
     gpsLongitude?: number;
+    fieldValues?: { templateFieldId: number; value: string }[];
   }
 ) {
   const supabase = await createClient();
   const { data: staffId } = await supabase.rpc("get_current_staff_id");
 
-  // Insert closure record
-  const { error: closureError }: AnyQuery = await (
+  // Insert closure record and get back the closure_id
+  const { data: closureRows, error: closureError }: AnyQuery = await (
     supabase.from("call_closures") as AnyQuery
-  ).insert({
-    call_id: callId,
-    closed_by_id: staffId,
-    closure_status: closureData.closureStatus,
-    visit_in_time: closureData.visitInTime,
-    visit_out_time: closureData.visitOutTime,
-    gps_latitude: closureData.gpsLatitude ?? null,
-    gps_longitude: closureData.gpsLongitude ?? null,
-    remarks: closureData.remarks,
-  });
+  )
+    .insert({
+      call_id: callId,
+      closed_by_id: staffId,
+      closure_status: closureData.closureStatus,
+      visit_in_time: closureData.visitInTime,
+      visit_out_time: closureData.visitOutTime,
+      gps_latitude: closureData.gpsLatitude ?? null,
+      gps_longitude: closureData.gpsLongitude ?? null,
+      remarks: closureData.remarks,
+    })
+    .select("closure_id")
+    .limit(1);
 
   if (closureError) return { error: closureError.message };
+
+  const closureId = (
+    (closureRows ?? []) as { closure_id: number }[]
+  )[0]?.closure_id;
+
+  // Insert dynamic field values if any
+  if (closureId && closureData.fieldValues && closureData.fieldValues.length > 0) {
+    const valueRows = closureData.fieldValues.map((fv) => ({
+      closure_id: closureId,
+      template_field_id: fv.templateFieldId,
+      field_value: fv.value,
+    }));
+
+    const { error: valuesError }: AnyQuery = await (
+      supabase.from("closure_field_values") as AnyQuery
+    ).insert(valueRows);
+
+    if (valuesError) return { error: valuesError.message };
+  }
 
   // Update call status to Closed
   const { error: updateError } = await (supabase.from("calls") as AnyQuery)

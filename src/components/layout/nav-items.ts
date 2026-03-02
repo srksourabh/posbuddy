@@ -9,6 +9,7 @@ import {
   Smartphone,
   FileSpreadsheet,
   Wrench,
+  ClipboardList,
   type LucideIcon,
 } from "lucide-react";
 
@@ -88,6 +89,12 @@ export const navGroups: NavGroup[] = [
         title: "Staff",
         url: "/master/staff",
         icon: Users,
+        roles: ["Back Office", "Management"],
+      },
+      {
+        title: "Closure Templates",
+        url: "/master/closure-templates",
+        icon: ClipboardList,
         roles: ["Back Office", "Management"],
       },
     ],

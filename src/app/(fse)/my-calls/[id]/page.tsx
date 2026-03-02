@@ -1,5 +1,5 @@
 import { notFound } from "next/navigation";
-import { fetchCallForFse } from "../actions";
+import { fetchCallForFse, fetchClosureTemplate } from "../actions";
 import { FseCallDetail } from "@/components/fse/fse-call-detail";
 
 interface PageProps {
@@ -15,5 +15,7 @@ export default async function FseCallDetailPage({ params }: PageProps) {
   const call = await fetchCallForFse(callId);
   if (!call) notFound();
 
-  return <FseCallDetail call={call} />;
+  const closureTemplate = await fetchClosureTemplate(call.customer_id);
+
+  return <FseCallDetail call={call} closureTemplate={closureTemplate} />;
 }
