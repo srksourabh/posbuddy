@@ -111,13 +111,25 @@ export async function importCalls(
     return (row[sourceCol] ?? "").trim();
   };
 
-  /** Parse DD/MM/YYYY or DD/MM/YYYY HH:mm into ISO format for PostgreSQL */
+  /** Parse DD/MM/YYYY or MM/DD/YYYY (with optional time) into ISO format */
   const parseDate = (raw: string): string | null => {
     if (!raw) return null;
-    // Match DD/MM/YYYY with optional HH:mm or HH:mm:ss
     const m = raw.match(/^(\d{1,2})[/\-.](\d{1,2})[/\-.](\d{4})(?:\s+(\d{1,2}):(\d{2})(?::(\d{2}))?)?$/);
     if (m) {
-      const [, dd, mm, yyyy, hh, min, ss] = m;
+      let [, a, b, yyyy, hh, min, ss] = m;
+      const numA = Number(a);
+      const numB = Number(b);
+      // Detect format: if first number > 12 it must be the day (DD/MM/YYYY)
+      // If second number > 12 it must be the day (MM/DD/YYYY)
+      // If both <= 12, assume DD/MM/YYYY (Indian format)
+      let dd: string, mm: string;
+      if (numA > 12) {
+        dd = a; mm = b;
+      } else if (numB > 12) {
+        dd = b; mm = a;
+      } else {
+        dd = a; mm = b; // default DD/MM
+      }
       const time = hh ? `T${hh.padStart(2, "0")}:${min}:${(ss ?? "00").padStart(2, "0")}` : "T00:00:00";
       return `${yyyy}-${mm.padStart(2, "0")}-${dd.padStart(2, "0")}${time}`;
     }
@@ -194,10 +206,12 @@ export async function importCalls(
         return null;
       }
 
-      // Skip duplicates
+      // Skip duplicates (already in DB or seen earlier in this spreadsheet)
       if (existingTickets.has(ticketNumber)) {
         return "duplicate";
       }
+      // Mark as seen so later rows with same ticket are also skipped
+      existingTickets.add(ticketNumber);
 
       const callTypeName = getValue(row, "call_type");
       const bankName = getValue(row, "acquiring_bank");
@@ -244,7 +258,7 @@ export async function importCalls(
 
     if (newRows.length > 0) {
       const { error }: AnyQuery = await (supabase.from("calls") as AnyQuery)
-        .insert(newRows);
+        .upsert(newRows, { onConflict: "call_ticket_number", ignoreDuplicates: true });
 
       if (error) {
         errors.push(`Batch ${Math.floor(i / BATCH_SIZE) + 1}: ${error.message}`);
