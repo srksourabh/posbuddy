@@ -136,7 +136,7 @@ export function ColumnMapper({
                     <SelectTrigger className="w-full">
                       <SelectValue placeholder="Select column" />
                     </SelectTrigger>
-                    <SelectContent>
+                    <SelectContent position="popper" className="max-h-60">
                       <SelectItem value="none">— Skip —</SelectItem>
                       {excelHeaders.map((header) => (
                         <SelectItem
