@@ -37,7 +37,10 @@ export function FileUpload({ onDataParsed }: FileUploadProps) {
           }
 
           const headers = Object.keys(jsonData[0]);
-          onDataParsed(headers, jsonData);
+          // Sanitize to plain objects — SheetJS objects have a prototype
+          // that Server Actions reject
+          const plainRows = jsonData.map((row) => ({ ...row }));
+          onDataParsed(headers, plainRows);
         } catch {
           setError("Failed to parse the file. Please check the format.");
         }
