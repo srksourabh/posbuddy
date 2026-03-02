@@ -1,5 +1,6 @@
 import { createClient } from "@/lib/supabase/server";
 import { MasterTable } from "@/components/master/master-table";
+import { HrSyncDialog } from "@/components/master/hr-sync-dialog";
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 type AnyQuery = any;
@@ -8,13 +9,14 @@ export default async function StaffPage() {
   const supabase = await createClient();
   const { data }: AnyQuery = await supabase
     .from("pos_staff")
-    .select("staff_id, full_name, hr_emp_code, department, designation, phone, email, city, is_active")
+    .select("staff_id, full_name, hr_emp_code, hr_user_id, department, designation, phone, email, city, is_active")
     .order("full_name");
 
   const rows = (data ?? []) as {
     staff_id: number;
     full_name: string | null;
     hr_emp_code: string;
+    hr_user_id: string | null;
     department: string | null;
     designation: string | null;
     phone: string | null;
@@ -23,13 +25,20 @@ export default async function StaffPage() {
     is_active: boolean;
   }[];
 
+  const existingHrUserIds = rows
+    .map((r) => r.hr_user_id)
+    .filter((id): id is string => id != null);
+
   return (
     <div className="space-y-6">
-      <div>
-        <h1 className="text-2xl font-bold tracking-tight">Staff</h1>
-        <p className="text-muted-foreground">
-          View and manage staff members.
-        </p>
+      <div className="flex items-center justify-between">
+        <div>
+          <h1 className="text-2xl font-bold tracking-tight">Staff</h1>
+          <p className="text-muted-foreground">
+            View and manage staff members.
+          </p>
+        </div>
+        <HrSyncDialog existingHrUserIds={existingHrUserIds} />
       </div>
       <MasterTable
         columns={[
