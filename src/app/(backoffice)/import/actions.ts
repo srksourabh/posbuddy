@@ -111,6 +111,20 @@ export async function importCalls(
     return (row[sourceCol] ?? "").trim();
   };
 
+  /** Parse DD/MM/YYYY or DD/MM/YYYY HH:mm into ISO format for PostgreSQL */
+  const parseDate = (raw: string): string | null => {
+    if (!raw) return null;
+    // Match DD/MM/YYYY with optional HH:mm or HH:mm:ss
+    const m = raw.match(/^(\d{1,2})[/\-.](\d{1,2})[/\-.](\d{4})(?:\s+(\d{1,2}):(\d{2})(?::(\d{2}))?)?$/);
+    if (m) {
+      const [, dd, mm, yyyy, hh, min, ss] = m;
+      const time = hh ? `T${hh.padStart(2, "0")}:${min}:${(ss ?? "00").padStart(2, "0")}` : "T00:00:00";
+      return `${yyyy}-${mm.padStart(2, "0")}-${dd.padStart(2, "0")}${time}`;
+    }
+    // Already ISO or other parseable format — return as-is
+    return raw;
+  };
+
   // Look up call types, banks, device models for name-to-id resolution
   const { data: callTypes }: AnyQuery = await supabase
     .from("call_types")
@@ -168,7 +182,7 @@ export async function importCalls(
         call_type_id: callTypeName
           ? callTypeMap.get(callTypeName.toLowerCase()) ?? null
           : null,
-        call_creation_date: getValue(row, "call_creation_date") || null,
+        call_creation_date: parseDate(getValue(row, "call_creation_date")),
         merchant_name: getValue(row, "merchant_name") || null,
         mid: getValue(row, "mid") || null,
         tid: getValue(row, "tid") || null,
