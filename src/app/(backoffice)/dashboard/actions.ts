@@ -57,26 +57,29 @@ export async function fetchDashboardStats(): Promise<DashboardStats> {
 export async function fetchCustomerBreakdown(): Promise<CustomerBreakdown[]> {
   const supabase = await createClient();
 
-  // Get calls grouped by customer using a raw count approach
-  const { data }: AnyQuery = await supabase
-    .from("calls")
-    .select("customer_id, customers ( customer_name )");
+  // Fetch all customers first
+  const { data: customers }: AnyQuery = await supabase
+    .from("customers")
+    .select("customer_id, customer_name");
 
-  const rows = (data ?? []) as {
+  const customerList = (customers ?? []) as {
     customer_id: number;
-    customers: { customer_name: string } | null;
+    customer_name: string;
   }[];
 
-  // Group and count
-  const grouped = new Map<string, number>();
-  for (const row of rows) {
-    const name = row.customers?.customer_name ?? "Unknown";
-    grouped.set(name, (grouped.get(name) ?? 0) + 1);
+  // Get count per customer using exact count (no row limit)
+  const results: CustomerBreakdown[] = [];
+  for (const c of customerList) {
+    const { count }: AnyQuery = await supabase
+      .from("calls")
+      .select("*", { count: "exact", head: true })
+      .eq("customer_id", c.customer_id);
+    if (count && count > 0) {
+      results.push({ customer_name: c.customer_name, count });
+    }
   }
 
-  return Array.from(grouped.entries())
-    .map(([customer_name, count]) => ({ customer_name, count }))
-    .sort((a, b) => b.count - a.count);
+  return results.sort((a, b) => b.count - a.count);
 }
 
 export async function fetchRecentActivity() {
