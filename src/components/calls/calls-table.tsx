@@ -92,6 +92,7 @@ export function CallsTable({ calls, total, page, pageSize }: CallsTableProps) {
               <TableHead>Customer</TableHead>
               <TableHead>Merchant</TableHead>
               <TableHead>City</TableHead>
+              <TableHead>Location</TableHead>
               <TableHead>Type</TableHead>
               <TableHead>Status</TableHead>
               <TableHead>Assigned To</TableHead>
@@ -102,7 +103,7 @@ export function CallsTable({ calls, total, page, pageSize }: CallsTableProps) {
             {calls.length === 0 ? (
               <TableRow>
                 <TableCell
-                  colSpan={9}
+                  colSpan={10}
                   className="h-24 text-center text-muted-foreground"
                 >
                   No calls found.
@@ -134,6 +135,21 @@ export function CallsTable({ calls, total, page, pageSize }: CallsTableProps) {
                     )}
                   </TableCell>
                   <TableCell>{call.city ?? "—"}</TableCell>
+                  <TableCell>
+                    {call.merchant_latitude && call.merchant_longitude ? (
+                      <a
+                        href={`https://www.google.com/maps?q=${call.merchant_latitude},${call.merchant_longitude}`}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="text-primary underline text-xs"
+                        onClick={(e) => e.stopPropagation()}
+                      >
+                        {Number(call.merchant_latitude).toFixed(4)}, {Number(call.merchant_longitude).toFixed(4)}
+                      </a>
+                    ) : (
+                      "—"
+                    )}
+                  </TableCell>
                   <TableCell>{call.call_type_name ?? "—"}</TableCell>
                   <TableCell>
                     <StatusBadge status={call.call_status} />

@@ -241,6 +241,8 @@ export async function importCalls(
           ? deviceMap.get(deviceName.toLowerCase()) ?? null
           : null,
         problem_description: getValue(row, "problem_description") || null,
+        merchant_latitude: parseFloat(getValue(row, "merchant_latitude")) || null,
+        merchant_longitude: parseFloat(getValue(row, "merchant_longitude")) || null,
         call_status: "Pending",
         source_raw_data: row,
         import_batch_id: batchId,

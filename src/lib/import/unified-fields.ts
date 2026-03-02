@@ -16,6 +16,8 @@ export const UNIFIED_FIELDS = [
   { key: "contact_phone", label: "Contact Phone", required: false },
   { key: "device_model", label: "Device Model", required: false },
   { key: "problem_description", label: "Problem Description", required: false },
+  { key: "merchant_latitude", label: "Latitude", required: false },
+  { key: "merchant_longitude", label: "Longitude", required: false },
 ] as const;
 
 export type UnifiedFieldKey = (typeof UNIFIED_FIELDS)[number]["key"];

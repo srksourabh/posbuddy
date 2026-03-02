@@ -205,6 +205,8 @@ export interface Database {
           assigned_to_id: number | null;
           assigned_by_id: number | null;
           assigned_at: string | null;
+          merchant_latitude: number | null;
+          merchant_longitude: number | null;
           source_raw_data: Record<string, unknown> | null;
           import_batch_id: string | null;
           imported_at: string;
@@ -234,6 +236,8 @@ export interface Database {
           assigned_to_id?: number | null;
           assigned_by_id?: number | null;
           assigned_at?: string | null;
+          merchant_latitude?: number | null;
+          merchant_longitude?: number | null;
           source_raw_data?: Record<string, unknown> | null;
           import_batch_id?: string | null;
           imported_at?: string;
