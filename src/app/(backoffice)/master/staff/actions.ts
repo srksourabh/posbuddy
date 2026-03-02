@@ -103,7 +103,7 @@ export async function syncFromHR(
 
     const staffRows = batch.map((emp) => ({
       hr_user_id: emp.id,
-      hr_emp_code: emp.employee_code,
+      hr_emp_code: emp.employee_code ?? `HR-${emp.id.slice(0, 8)}`,
       full_name: emp.full_name,
       phone: emp.phone,
       email: emp.email,
