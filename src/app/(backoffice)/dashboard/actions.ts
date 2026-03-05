@@ -27,25 +27,19 @@ export interface CustomerBreakdown {
 export async function fetchDashboardStats(): Promise<DashboardStats> {
   const supabase = await createClient();
 
-  const statuses = ["Pending", "Assigned", "In Progress", "Closed", "Cancelled"];
-  const counts: Record<string, number> = {};
-
-  // Get total count
-  const { count: totalCount }: AnyQuery = await supabase
+  // Single query: fetch all call statuses and count in JS
+  const { data }: AnyQuery = await supabase
     .from("calls")
-    .select("*", { count: "exact", head: true });
+    .select("call_status");
 
-  // Get count per status
-  for (const status of statuses) {
-    const { count }: AnyQuery = await supabase
-      .from("calls")
-      .select("*", { count: "exact", head: true })
-      .eq("call_status", status);
-    counts[status] = count ?? 0;
+  const rows = (data ?? []) as { call_status: string }[];
+  const counts: Record<string, number> = {};
+  for (const row of rows) {
+    counts[row.call_status] = (counts[row.call_status] ?? 0) + 1;
   }
 
   return {
-    total: totalCount ?? 0,
+    total: rows.length,
     pending: counts["Pending"] ?? 0,
     assigned: counts["Assigned"] ?? 0,
     inProgress: counts["In Progress"] ?? 0,

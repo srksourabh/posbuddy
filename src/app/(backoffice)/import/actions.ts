@@ -116,20 +116,13 @@ export async function importCalls(
     if (!raw) return null;
     const m = raw.match(/^(\d{1,2})[/\-.](\d{1,2})[/\-.](\d{4})(?:\s+(\d{1,2}):(\d{2})(?::(\d{2}))?)?$/);
     if (m) {
-      let [, a, b, yyyy, hh, min, ss] = m;
+      const [, a, b, yyyy, hh, min, ss] = m;
       const numA = Number(a);
       const numB = Number(b);
       // Detect format: if first number > 12 it must be the day (DD/MM/YYYY)
       // If second number > 12 it must be the day (MM/DD/YYYY)
       // If both <= 12, assume DD/MM/YYYY (Indian format)
-      let dd: string, mm: string;
-      if (numA > 12) {
-        dd = a; mm = b;
-      } else if (numB > 12) {
-        dd = b; mm = a;
-      } else {
-        dd = a; mm = b; // default DD/MM
-      }
+      const [dd, mm] = numA > 12 ? [a, b] : numB > 12 ? [b, a] : [a, b];
       const time = hh ? `T${hh.padStart(2, "0")}:${min}:${(ss ?? "00").padStart(2, "0")}` : "T00:00:00";
       return `${yyyy}-${mm.padStart(2, "0")}-${dd.padStart(2, "0")}${time}`;
     }

@@ -12,14 +12,11 @@ import {
 } from "@/components/ui/select";
 import { Button } from "@/components/ui/button";
 import { X } from "lucide-react";
+import { CALL_STATUSES } from "@/lib/constants";
 
 const STATUSES = [
   { value: "all", label: "All Statuses" },
-  { value: "Pending", label: "Pending" },
-  { value: "Assigned", label: "Assigned" },
-  { value: "In Progress", label: "In Progress" },
-  { value: "Closed", label: "Closed" },
-  { value: "Cancelled", label: "Cancelled" },
+  ...CALL_STATUSES.map((s) => ({ value: s, label: s })),
 ];
 
 interface CallsFiltersProps {

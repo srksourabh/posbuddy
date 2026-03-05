@@ -9,19 +9,12 @@ import { assignCall } from "@/app/(backoffice)/calls/actions";
 import { toast } from "sonner";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
+import { STATUS_VARIANTS } from "@/lib/constants";
 
 interface TeamCallsTableProps {
   calls: TeamCall[];
   fses: { staff_id: number; full_name: string }[];
 }
-
-const statusVariants: Record<string, "default" | "secondary" | "destructive" | "outline"> = {
-  Pending: "outline",
-  Assigned: "secondary",
-  "In Progress": "default",
-  Closed: "secondary",
-  Cancelled: "destructive",
-};
 
 export function TeamCallsTable({ calls, fses }: TeamCallsTableProps) {
   const [selected, setSelected] = useState<Set<number>>(new Set());
@@ -113,6 +106,7 @@ export function TeamCallsTable({ calls, fses }: TeamCallsTableProps) {
                   type="checkbox"
                   checked={selected.size === calls.length && calls.length > 0}
                   onChange={toggleAll}
+                  aria-label="Select all calls"
                   className="accent-primary"
                 />
               </th>
@@ -160,6 +154,7 @@ export function TeamCallsTable({ calls, fses }: TeamCallsTableProps) {
                     type="checkbox"
                     checked={selected.has(c.call_id)}
                     onChange={() => toggleSelect(c.call_id)}
+                    aria-label={`Select call ${c.call_ticket_number}`}
                     className="accent-primary"
                   />
                 </td>
@@ -186,7 +181,7 @@ export function TeamCallsTable({ calls, fses }: TeamCallsTableProps) {
                   )}
                 </td>
                 <td className="p-3">
-                  <Badge variant={statusVariants[c.call_status] ?? "secondary"}>
+                  <Badge variant={STATUS_VARIANTS[c.call_status] ?? "secondary"}>
                     {c.call_status}
                   </Badge>
                 </td>

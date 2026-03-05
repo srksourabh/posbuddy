@@ -1,6 +1,7 @@
 "use client";
 
 import { Phone, MapPin } from "lucide-react";
+import { getInitials } from "@/lib/helpers";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import type { TeamFSE } from "@/app/(backoffice)/assign/actions";
@@ -142,11 +143,4 @@ export function TeamView({ fses, currentUser }: TeamViewProps) {
       </Card>
     </div>
   );
-}
-
-function getInitials(name: string | null | undefined): string {
-  if (!name) return "?";
-  const parts = name.trim().split(/\s+/);
-  if (parts.length >= 2) return (parts[0][0] + parts[1][0]).toUpperCase();
-  return name.substring(0, 2).toUpperCase();
 }

@@ -5,6 +5,7 @@ import { AlertTriangle, Users, Clock, CheckCircle } from "lucide-react";
 import Link from "next/link";
 import type { TeamFSE, PendingCall } from "@/app/(backoffice)/assign/actions";
 import { formatDistanceToNow } from "date-fns";
+import { getInitials } from "@/lib/helpers";
 
 interface CoordinatorDashboardProps {
   stats: {
@@ -114,11 +115,7 @@ export function CoordinatorDashboard({
             )}
             {fses.map((fse) => {
               const isOnSite = fse.in_progress_calls > 0;
-              const initials = (fse.full_name ?? "?")
-                .split(" ")
-                .map((n) => n[0])
-                .join("")
-                .slice(0, 2);
+              const initials = getInitials(fse.full_name);
               return (
                 <div
                   key={fse.staff_id}

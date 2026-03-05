@@ -3,6 +3,7 @@
 import { revalidatePath } from "next/cache";
 import { createClient } from "@/lib/supabase/server";
 import type { Database } from "@/lib/types/database";
+import { flattenRow, buildStaffMap, sanitizeError } from "@/lib/helpers";
 
 type CallRow = Database["public"]["Tables"]["calls"]["Row"];
 
@@ -95,34 +96,25 @@ export async function fetchCalls(
       .from("pos_staff")
       .select("staff_id, full_name")
       .in("staff_id", assignedIds) as AnyQuery;
-    staffMap = Object.fromEntries(
-      ((staffRows ?? []) as { staff_id: number; full_name: string | null }[]).map(
-        (s) => [s.staff_id, s.full_name ?? "Unknown"]
-      )
-    );
+    staffMap = buildStaffMap((staffRows ?? []) as { staff_id: number; full_name: string | null }[]);
   }
 
-  // Flatten joined data
+  const relationKeys = ["customers", "call_types", "acquiring_banks", "device_models"];
   const calls: CallWithRelations[] = rows.map((row) => {
     const customers = row.customers as { customer_name: string; customer_code: string } | null;
     const call_types = row.call_types as { call_type_name: string } | null;
     const acquiring_banks = row.acquiring_banks as { bank_name: string } | null;
     const device_models = row.device_models as { model_name: string } | null;
-
-    const callData = Object.fromEntries(
-      Object.entries(row).filter(([k]) => !["customers", "call_types", "acquiring_banks", "device_models"].includes(k))
-    );
     const assignedToId = row.assigned_to_id as number | null;
 
-    return {
-      ...callData,
+    return flattenRow<CallWithRelations>(row, relationKeys, {
       customer_name: customers?.customer_name,
       customer_code: customers?.customer_code,
       call_type_name: call_types?.call_type_name,
       bank_name: acquiring_banks?.bank_name,
       device_model_name: device_models?.model_name,
       assigned_to_name: assignedToId ? staffMap[assignedToId] : undefined,
-    } as CallWithRelations;
+    });
   });
 
   return { calls, total: count ?? 0, page, pageSize };
@@ -156,18 +148,13 @@ export async function fetchCallById(
   const acquiring_banks = row.acquiring_banks as { bank_name: string } | null;
   const device_models = row.device_models as { model_name: string } | null;
 
-  const callData = Object.fromEntries(
-    Object.entries(row).filter(([k]) => !["customers", "call_types", "acquiring_banks", "device_models"].includes(k))
-  );
-
-  return {
-    ...callData,
+  return flattenRow<CallWithRelations>(row, ["customers", "call_types", "acquiring_banks", "device_models"], {
     customer_name: customers?.customer_name,
     customer_code: customers?.customer_code,
     call_type_name: call_types?.call_type_name,
     bank_name: acquiring_banks?.bank_name,
     device_model_name: device_models?.model_name,
-  } as CallWithRelations;
+  });
 }
 
 export async function fetchStaffForAssignment() {
@@ -216,7 +203,7 @@ export async function assignCall(callId: number, assignedToId: number) {
     })
     .eq("call_id", callId);
 
-  if (error) return { error: error.message };
+  if (error) return { error: sanitizeError(error) };
 
   await (supabase.from("call_status_log") as AnyQuery).insert({
     call_id: callId,
@@ -266,7 +253,7 @@ export async function updateCallStatus(
     .update({ call_status: newStatus })
     .eq("call_id", callId);
 
-  if (error) return { error: error.message };
+  if (error) return { error: sanitizeError(error) };
 
   await (supabase.from("call_status_log") as AnyQuery).insert({
     call_id: callId,

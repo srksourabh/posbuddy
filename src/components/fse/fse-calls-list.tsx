@@ -9,18 +9,11 @@ import { useRealtimeCalls } from "@/hooks/use-realtime-calls";
 import { startVisit } from "@/app/(fse)/my-calls/actions";
 import { useTransition } from "react";
 import type { FseCall } from "@/app/(fse)/my-calls/actions";
+import { CALL_TYPE_COLORS, DEFAULT_CALL_TYPE_COLOR } from "@/lib/constants";
 
 interface FseCallsListProps {
   calls: FseCall[];
 }
-
-const callTypeColors: Record<string, { bg: string; text: string }> = {
-  Installation: { bg: "bg-green-100", text: "text-green-700" },
-  "De-installation": { bg: "bg-red-100", text: "text-red-700" },
-  "Break Down": { bg: "bg-yellow-100", text: "text-yellow-700" },
-  "Asset Swap": { bg: "bg-blue-100", text: "text-blue-700" },
-  "PM Visit": { bg: "bg-purple-100", text: "text-purple-700" },
-};
 
 export function FseCallsList({ calls }: FseCallsListProps) {
   const router = useRouter();
@@ -70,10 +63,7 @@ function FseCallCard({
   const [isPending, startTransition] = useTransition();
   const isAssigned = call.call_status === "Assigned";
   const isInProgress = call.call_status === "In Progress";
-  const typeStyle = callTypeColors[call.call_type_name ?? ""] ?? {
-    bg: "bg-muted",
-    text: "text-muted-foreground",
-  };
+  const typeStyle = CALL_TYPE_COLORS[call.call_type_name ?? ""] ?? DEFAULT_CALL_TYPE_COLOR;
 
   const barColor = isInProgress
     ? "bg-indigo-500"
@@ -91,8 +81,12 @@ function FseCallCard({
 
   return (
     <div
+      role="button"
+      tabIndex={0}
+      aria-label={`View call ${call.call_ticket_number} for ${call.merchant_name ?? "Unknown Merchant"}`}
       className="bg-card border rounded-2xl overflow-hidden shadow-sm cursor-pointer active:scale-[0.99] transition-transform"
       onClick={onNavigate}
+      onKeyDown={(e) => { if (e.key === "Enter" || e.key === " ") { e.preventDefault(); onNavigate(); } }}
     >
       <div className={`h-1 ${barColor}`} />
       <div className="p-4">
@@ -194,6 +188,7 @@ function FseCallCard({
               }}
             >
               <Navigation className="h-4 w-4" />
+              <span className="sr-only">Navigate</span>
             </Button>
             {call.contact_phone && (
               <Button
@@ -203,7 +198,7 @@ function FseCallCard({
                 asChild
                 onClick={(e) => e.stopPropagation()}
               >
-                <a href={`tel:${call.contact_phone}`}>
+                <a href={`tel:${call.contact_phone}`} aria-label="Call merchant">
                   <Phone className="h-4 w-4" />
                 </a>
               </Button>

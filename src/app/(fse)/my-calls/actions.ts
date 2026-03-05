@@ -3,6 +3,7 @@
 import { revalidatePath } from "next/cache";
 import { createClient } from "@/lib/supabase/server";
 import type { Database } from "@/lib/types/database";
+import { flattenRow, sanitizeError } from "@/lib/helpers";
 
 type CallRow = Database["public"]["Tables"]["calls"]["Row"];
 
@@ -35,25 +36,19 @@ export async function fetchMyAssignedCalls(): Promise<FseCall[]> {
 
   const rows = (data ?? []) as Record<string, unknown>[];
 
+  const relationKeys = ["customers", "call_types", "acquiring_banks", "device_models"];
   return rows.map((row) => {
     const customers = row.customers as { customer_name: string } | null;
     const call_types = row.call_types as { call_type_name: string } | null;
     const acquiring_banks = row.acquiring_banks as { bank_name: string } | null;
     const device_models = row.device_models as { model_name: string } | null;
 
-    const callData = Object.fromEntries(
-      Object.entries(row).filter(
-        ([k]) => !["customers", "call_types", "acquiring_banks", "device_models"].includes(k)
-      )
-    );
-
-    return {
-      ...callData,
+    return flattenRow<FseCall>(row, relationKeys, {
       customer_name: customers?.customer_name,
       call_type_name: call_types?.call_type_name,
       bank_name: acquiring_banks?.bank_name,
       device_model_name: device_models?.model_name,
-    } as FseCall;
+    });
   });
 }
 
@@ -66,7 +61,7 @@ export async function startVisit(callId: number) {
     .update({ call_status: "In Progress" })
     .eq("call_id", callId);
 
-  if (error) return { error: error.message };
+  if (error) return { error: sanitizeError(error) };
 
   // Log status change
   await (supabase.from("call_status_log") as AnyQuery).insert({
@@ -139,7 +134,7 @@ export async function closeCall(
     .select("closure_id")
     .limit(1);
 
-  if (closureError) return { error: closureError.message };
+  if (closureError) return { error: sanitizeError(closureError) };
 
   const closureId = (
     (closureRows ?? []) as { closure_id: number }[]
@@ -157,7 +152,7 @@ export async function closeCall(
       supabase.from("closure_field_values") as AnyQuery
     ).insert(valueRows);
 
-    if (valuesError) return { error: valuesError.message };
+    if (valuesError) return { error: sanitizeError(valuesError) };
   }
 
   // Update call status to Closed
@@ -165,7 +160,7 @@ export async function closeCall(
     .update({ call_status: "Closed" })
     .eq("call_id", callId);
 
-  if (updateError) return { error: updateError.message };
+  if (updateError) return { error: sanitizeError(updateError) };
 
   // Log status change
   await (supabase.from("call_status_log") as AnyQuery).insert({
@@ -223,17 +218,10 @@ export async function fetchCallForFse(callId: number): Promise<FseCall | null> {
   const acquiring_banks = row.acquiring_banks as { bank_name: string } | null;
   const device_models = row.device_models as { model_name: string } | null;
 
-  const callData = Object.fromEntries(
-    Object.entries(row).filter(
-      ([k]) => !["customers", "call_types", "acquiring_banks", "device_models"].includes(k)
-    )
-  );
-
-  return {
-    ...callData,
+  return flattenRow<FseCall>(row, ["customers", "call_types", "acquiring_banks", "device_models"], {
     customer_name: customers?.customer_name,
     call_type_name: call_types?.call_type_name,
     bank_name: acquiring_banks?.bank_name,
     device_model_name: device_models?.model_name,
-  } as FseCall;
+  });
 }

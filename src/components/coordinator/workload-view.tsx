@@ -1,6 +1,7 @@
 "use client";
 
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { getInitials } from "@/lib/helpers";
 import type { TeamFSE } from "@/app/(backoffice)/assign/actions";
 
 interface WorkloadViewProps {
@@ -86,11 +87,4 @@ export function WorkloadView({ fses }: WorkloadViewProps) {
       </CardContent>
     </Card>
   );
-}
-
-function getInitials(name: string | null | undefined): string {
-  if (!name) return "?";
-  const parts = name.trim().split(/\s+/);
-  if (parts.length >= 2) return (parts[0][0] + parts[1][0]).toUpperCase();
-  return name.substring(0, 2).toUpperCase();
 }

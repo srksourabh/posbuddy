@@ -1,6 +1,7 @@
 "use server";
 
 import { createClient } from "@/lib/supabase/server";
+import { buildStaffMap } from "@/lib/helpers";
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 type AnyQuery = any;
@@ -179,17 +180,9 @@ export async function fetchTeamActivityLog() {
   if (staffIds.length > 0) {
     const { data: staffRows }: AnyQuery = await supabase
       .from("pos_staff")
-      .select("staff_id, full_name, department")
+      .select("staff_id, full_name")
       .in("staff_id", staffIds);
-    staffMap = Object.fromEntries(
-      (
-        (staffRows ?? []) as {
-          staff_id: number;
-          full_name: string | null;
-          department: string | null;
-        }[]
-      ).map((s) => [s.staff_id, s.full_name ?? "Unknown"])
-    );
+    staffMap = buildStaffMap((staffRows ?? []) as { staff_id: number; full_name: string | null }[]);
   }
 
   // Fetch call ticket numbers

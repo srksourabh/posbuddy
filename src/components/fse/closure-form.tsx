@@ -16,6 +16,7 @@ import { toast } from "sonner";
 import { closeCall } from "@/app/(fse)/my-calls/actions";
 import type { ClosureTemplateField } from "@/app/(fse)/my-calls/actions";
 import { Camera, X, ChevronLeft, ChevronRight, Check } from "lucide-react";
+import { CLOSURE_STATUSES } from "@/lib/constants";
 
 interface ClosureFormProps {
   callId: number;
@@ -23,15 +24,6 @@ interface ClosureFormProps {
   onClose: () => void;
   onClosed: () => void;
 }
-
-const CLOSURE_STATUSES = [
-  "Resolved",
-  "Partially Resolved",
-  "Unresolved - Part Required",
-  "Unresolved - Merchant Not Available",
-  "Unresolved - Wrong Address",
-  "Unresolved - Other",
-];
 
 const TOTAL_STEPS = 3;
 

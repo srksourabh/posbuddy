@@ -10,6 +10,7 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { useCallback } from "react";
+import { CALL_STATUSES } from "@/lib/constants";
 
 interface TeamCallsFiltersProps {
   customers: { customer_id: number; customer_name: string }[];
@@ -73,7 +74,7 @@ export function TeamCallsFilters({ customers, fses }: TeamCallsFiltersProps) {
         </SelectTrigger>
         <SelectContent>
           <SelectItem value="all">All Statuses</SelectItem>
-          {["Pending", "Assigned", "In Progress", "Closed", "Cancelled"].map(
+          {CALL_STATUSES.map(
             (s) => (
               <SelectItem key={s} value={s}>
                 {s}

@@ -45,3 +45,5 @@ supabase/.temp/
 
 # windows
 Thumbs.db
+
+.vercel

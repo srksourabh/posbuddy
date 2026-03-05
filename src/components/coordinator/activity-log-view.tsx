@@ -3,6 +3,7 @@
 import { formatDistanceToNow } from "date-fns";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
+import { getInitials } from "@/lib/helpers";
 
 interface ActivityEntry {
   log_id: number;
@@ -103,10 +104,4 @@ export function ActivityLogView({ logs }: ActivityLogViewProps) {
       ))}
     </div>
   );
-}
-
-function getInitials(name: string): string {
-  const parts = name.trim().split(/\s+/);
-  if (parts.length >= 2) return (parts[0][0] + parts[1][0]).toUpperCase();
-  return name.substring(0, 2).toUpperCase();
 }

@@ -4,7 +4,6 @@ import { useState, useTransition, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import {
   ArrowLeft,
-  MapPin,
   Phone,
   Play,
   Navigation,
@@ -44,8 +43,8 @@ function VisitTimer({ startTime }: { startTime: string }) {
   }, [startTime]);
 
   return (
-    <div className="flex items-center gap-2 mt-3">
-      <div className="h-2 w-2 rounded-full bg-green-400 animate-pulse" />
+    <div className="flex items-center gap-2 mt-3" role="timer" aria-live="polite" aria-label="Visit duration">
+      <div className="h-2 w-2 rounded-full bg-green-400 animate-pulse" aria-hidden="true" />
       <span className="text-2xl font-bold tabular-nums">{elapsed}</span>
       <span className="text-xs opacity-70">visit duration</span>
     </div>
@@ -86,7 +85,7 @@ export function FseCallDetail({
       {/* Back button (only when not in-progress, since header replaces it) */}
       {!isInProgress && (
         <div className="flex items-center gap-3">
-          <Button variant="ghost" size="icon" onClick={() => router.back()}>
+          <Button variant="ghost" size="icon" aria-label="Go back" onClick={() => router.back()}>
             <ArrowLeft className="h-5 w-5" />
           </Button>
           <div className="flex-1 min-w-0">
@@ -108,6 +107,7 @@ export function FseCallDetail({
             <Button
               variant="ghost"
               size="icon"
+              aria-label="Go back"
               className="text-white hover:bg-white/10 -ml-2"
               onClick={() => router.back()}
             >
@@ -218,6 +218,7 @@ export function FseCallDetail({
       <div className="grid grid-cols-3 gap-2">
         <Button
           variant="outline"
+          aria-label="Navigate to merchant location"
           className="flex-col gap-1 h-auto py-3 bg-slate-50 dark:bg-slate-900 border-slate-200"
           onClick={() => {
             window.open(

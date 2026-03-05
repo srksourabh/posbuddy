@@ -16,6 +16,7 @@ import {
   DialogFooter,
 } from "@/components/ui/dialog";
 import { toast } from "sonner";
+import { getInitials } from "@/lib/helpers";
 import { assignCall, bulkAssignCalls } from "@/app/(backoffice)/calls/actions";
 import type { PendingCall, TeamFSE } from "@/app/(backoffice)/assign/actions";
 
@@ -274,11 +275,4 @@ export function AssignCallsView({
       </Dialog>
     </>
   );
-}
-
-function getInitials(name: string | null | undefined): string {
-  if (!name) return "?";
-  const parts = name.trim().split(/\s+/);
-  if (parts.length >= 2) return (parts[0][0] + parts[1][0]).toUpperCase();
-  return name.substring(0, 2).toUpperCase();
 }
