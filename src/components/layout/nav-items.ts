@@ -10,6 +10,9 @@ import {
   FileSpreadsheet,
   Wrench,
   ClipboardList,
+  UserCheck,
+  BarChart3,
+  Clock,
   type LucideIcon,
 } from "lucide-react";
 
@@ -17,7 +20,8 @@ export interface NavItem {
   title: string;
   url: string;
   icon: LucideIcon;
-  roles?: string[]; // if empty, visible to all
+  roles?: string[]; // if empty, visible to all back-office roles
+  adminOnly?: boolean; // requires is_admin flag
 }
 
 export interface NavGroup {
@@ -42,19 +46,44 @@ export const navGroups: NavGroup[] = [
     ],
   },
   {
+    label: "Coordination",
+    items: [
+      {
+        title: "Assign Calls",
+        url: "/assign",
+        icon: UserCheck,
+      },
+      {
+        title: "My Team",
+        url: "/team",
+        icon: Users,
+      },
+      {
+        title: "Workload",
+        url: "/workload",
+        icon: BarChart3,
+      },
+      {
+        title: "Activity Log",
+        url: "/activity",
+        icon: Clock,
+      },
+    ],
+  },
+  {
     label: "Operations",
     items: [
       {
         title: "Import Calls",
         url: "/import",
         icon: Upload,
-        roles: ["Back Office", "Management"],
+        adminOnly: true,
       },
       {
         title: "Reports",
         url: "/reports",
         icon: FileSpreadsheet,
-        roles: ["Back Office", "Management"],
+        adminOnly: true,
       },
     ],
   },
@@ -65,37 +94,37 @@ export const navGroups: NavGroup[] = [
         title: "Customers",
         url: "/master/customers",
         icon: Building2,
-        roles: ["Back Office", "Management"],
+        adminOnly: true,
       },
       {
         title: "Banks",
         url: "/master/banks",
         icon: Landmark,
-        roles: ["Back Office", "Management"],
+        adminOnly: true,
       },
       {
         title: "Device Models",
         url: "/master/devices",
         icon: Smartphone,
-        roles: ["Back Office", "Management"],
+        adminOnly: true,
       },
       {
         title: "Call Types",
         url: "/master/call-types",
         icon: Wrench,
-        roles: ["Back Office", "Management"],
+        adminOnly: true,
       },
       {
         title: "Staff",
         url: "/master/staff",
         icon: Users,
-        roles: ["Back Office", "Management"],
+        adminOnly: true,
       },
       {
         title: "Closure Templates",
         url: "/master/closure-templates",
         icon: ClipboardList,
-        roles: ["Back Office", "Management"],
+        adminOnly: true,
       },
     ],
   },
@@ -106,7 +135,7 @@ export const navGroups: NavGroup[] = [
         title: "Column Mappings",
         url: "/settings/mappings",
         icon: Settings,
-        roles: ["Back Office", "Management"],
+        adminOnly: true,
       },
     ],
   },

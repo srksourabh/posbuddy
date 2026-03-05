@@ -109,6 +109,7 @@ export interface Database {
           pincode: string | null;
           date_of_joining: string | null;
           is_active: boolean;
+          is_admin: boolean;
           deactivated_at: string | null;
           last_synced_at: string;
         };
@@ -130,6 +131,7 @@ export interface Database {
           pincode?: string | null;
           date_of_joining?: string | null;
           is_active?: boolean;
+          is_admin?: boolean;
           deactivated_at?: string | null;
           last_synced_at?: string;
         };
@@ -357,6 +359,10 @@ export interface Database {
       get_downline_staff_ids: {
         Args: { manager_staff_id: number };
         Returns: number[];
+      };
+      get_current_staff_is_admin: {
+        Args: Record<string, never>;
+        Returns: boolean;
       };
     };
   };
