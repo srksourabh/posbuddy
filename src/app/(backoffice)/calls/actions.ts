@@ -4,6 +4,7 @@ import { revalidatePath } from "next/cache";
 import { createClient } from "@/lib/supabase/server";
 import type { Database } from "@/lib/types/database";
 import { flattenRow, buildStaffMap, sanitizeError } from "@/lib/helpers";
+import { assignCallSchema, bulkAssignCallsSchema, updateCallStatusSchema } from "@/lib/validations";
 
 type CallRow = Database["public"]["Tables"]["calls"]["Row"];
 
@@ -179,6 +180,9 @@ export async function fetchStaffForAssignment() {
 }
 
 export async function assignCall(callId: number, assignedToId: number) {
+  const parsed = assignCallSchema.safeParse({ callId, assignedToId });
+  if (!parsed.success) return { error: parsed.error.issues[0].message };
+
   const supabase = await createClient();
 
   const { data: staffId } = await supabase.rpc("get_current_staff_id");
@@ -221,6 +225,9 @@ export async function bulkAssignCalls(
   callIds: number[],
   assignedToId: number
 ) {
+  const parsed = bulkAssignCallsSchema.safeParse({ callIds, assignedToId });
+  if (!parsed.success) return { error: parsed.error.issues[0].message };
+
   const results = await Promise.all(
     callIds.map((id) => assignCall(id, assignedToId))
   );
@@ -236,6 +243,9 @@ export async function updateCallStatus(
   newStatus: string,
   reason?: string
 ) {
+  const parsed = updateCallStatusSchema.safeParse({ callId, newStatus, reason });
+  if (!parsed.success) return { error: parsed.error.issues[0].message };
+
   const supabase = await createClient();
 
   const { data: staffId } = await supabase.rpc("get_current_staff_id");

@@ -4,6 +4,7 @@ import { revalidatePath } from "next/cache";
 import { createClient } from "@/lib/supabase/server";
 import type { Database } from "@/lib/types/database";
 import { flattenRow, sanitizeError } from "@/lib/helpers";
+import { startVisitSchema, closeCallSchema } from "@/lib/validations";
 
 type CallRow = Database["public"]["Tables"]["calls"]["Row"];
 
@@ -53,6 +54,9 @@ export async function fetchMyAssignedCalls(): Promise<FseCall[]> {
 }
 
 export async function startVisit(callId: number) {
+  const parsed = startVisitSchema.safeParse({ callId });
+  if (!parsed.success) return { error: parsed.error.issues[0].message };
+
   const supabase = await createClient();
   const { data: staffId } = await supabase.rpc("get_current_staff_id");
 
@@ -114,6 +118,9 @@ export async function closeCall(
     fieldValues?: { templateFieldId: number; value: string }[];
   }
 ) {
+  const parsed = closeCallSchema.safeParse({ callId, closureData });
+  if (!parsed.success) return { error: parsed.error.issues[0].message };
+
   const supabase = await createClient();
   const { data: staffId } = await supabase.rpc("get_current_staff_id");
 
