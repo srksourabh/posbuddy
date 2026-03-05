@@ -13,6 +13,8 @@ import {
   UserCheck,
   BarChart3,
   Clock,
+  PhoneCall,
+  PieChart,
   type LucideIcon,
 } from "lucide-react";
 
@@ -62,6 +64,16 @@ export const navGroups: NavGroup[] = [
         title: "Workload",
         url: "/workload",
         icon: BarChart3,
+      },
+      {
+        title: "Team Calls",
+        url: "/team-calls",
+        icon: PhoneCall,
+      },
+      {
+        title: "Team Reports",
+        url: "/team-reports",
+        icon: PieChart,
       },
       {
         title: "Activity Log",

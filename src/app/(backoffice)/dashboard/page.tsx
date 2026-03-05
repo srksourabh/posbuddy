@@ -8,9 +8,28 @@ import {
 } from "./actions";
 import { DashboardCharts } from "@/components/dashboard/dashboard-charts";
 import { RecentActivity } from "@/components/dashboard/recent-activity";
+import { CoordinatorDashboard } from "@/components/coordinator/coordinator-dashboard";
+import {
+  fetchMyTeamFSEs,
+  fetchPendingCalls,
+  fetchTeamCallStats,
+  fetchTeamActivityLog,
+} from "../assign/actions";
+import { requireBackOffice } from "@/lib/auth/session";
 import { Phone, Clock, CheckCircle, AlertTriangle } from "lucide-react";
 
-export default function DashboardPage() {
+export default async function DashboardPage() {
+  const authUser = await requireBackOffice();
+  const isAdmin = authUser.staff.is_admin;
+
+  if (!isAdmin) {
+    return (
+      <Suspense fallback={<CoordSkeleton />}>
+        <CoordinatorSection />
+      </Suspense>
+    );
+  }
+
   return (
     <div className="space-y-6">
       <h1 className="text-2xl font-bold tracking-tight">Dashboard</h1>
@@ -29,6 +48,29 @@ export default function DashboardPage() {
         </Suspense>
       </div>
     </div>
+  );
+}
+
+async function CoordinatorSection() {
+  const [fses, pendingCalls, teamStats, activityLog] = await Promise.all([
+    fetchMyTeamFSEs(),
+    fetchPendingCalls(),
+    fetchTeamCallStats(),
+    fetchTeamActivityLog(),
+  ]);
+
+  return (
+    <CoordinatorDashboard
+      stats={{
+        unassigned: teamStats.pending,
+        teamAssigned: teamStats.assigned,
+        teamInProgress: teamStats.inProgress,
+        teamClosed: teamStats.closed,
+      }}
+      fses={fses}
+      pendingCalls={pendingCalls}
+      recentActivity={activityLog}
+    />
   );
 }
 
@@ -113,6 +155,23 @@ function StatsSkeleton() {
       {Array.from({ length: 4 }).map((_, i) => (
         <Skeleton key={i} className="h-24" />
       ))}
+    </div>
+  );
+}
+
+function CoordSkeleton() {
+  return (
+    <div className="space-y-6">
+      <Skeleton className="h-8 w-64" />
+      <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
+        {Array.from({ length: 4 }).map((_, i) => (
+          <Skeleton key={i} className="h-24" />
+        ))}
+      </div>
+      <div className="grid gap-6 lg:grid-cols-2">
+        <Skeleton className="h-80" />
+        <Skeleton className="h-80" />
+      </div>
     </div>
   );
 }

@@ -1,5 +1,5 @@
 import { notFound } from "next/navigation";
-import { fetchCallForFse, fetchClosureTemplate } from "../actions";
+import { fetchCallForFse, fetchClosureTemplate, fetchVisitStartTime } from "../actions";
 import { FseCallDetail } from "@/components/fse/fse-call-detail";
 
 interface PageProps {
@@ -15,7 +15,18 @@ export default async function FseCallDetailPage({ params }: PageProps) {
   const call = await fetchCallForFse(callId);
   if (!call) notFound();
 
-  const closureTemplate = await fetchClosureTemplate(call.customer_id);
+  const [closureTemplate, visitStartTime] = await Promise.all([
+    fetchClosureTemplate(call.customer_id),
+    call.call_status === "In Progress"
+      ? fetchVisitStartTime(callId)
+      : Promise.resolve(null),
+  ]);
 
-  return <FseCallDetail call={call} closureTemplate={closureTemplate} />;
+  return (
+    <FseCallDetail
+      call={call}
+      closureTemplate={closureTemplate}
+      visitStartTime={visitStartTime}
+    />
+  );
 }

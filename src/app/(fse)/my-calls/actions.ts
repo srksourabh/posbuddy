@@ -180,6 +180,23 @@ export async function closeCall(
   return { success: true };
 }
 
+export async function fetchVisitStartTime(
+  callId: number
+): Promise<string | null> {
+  const supabase = await createClient();
+
+  const { data }: AnyQuery = await supabase
+    .from("call_status_log")
+    .select("changed_at")
+    .eq("call_id", callId)
+    .eq("new_status", "In Progress")
+    .order("changed_at", { ascending: false })
+    .limit(1);
+
+  const rows = (data ?? []) as { changed_at: string }[];
+  return rows[0]?.changed_at ?? null;
+}
+
 export async function fetchCallForFse(callId: number): Promise<FseCall | null> {
   const supabase = await createClient();
 
