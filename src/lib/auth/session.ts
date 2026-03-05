@@ -70,3 +70,14 @@ export async function requireFSE(): Promise<AuthUser> {
   if (authUser.staff.department !== "FSE") redirect("/dashboard");
   return authUser;
 }
+
+/**
+ * Requires admin flag on the staff record.
+ * Redirects non-admin users to /dashboard.
+ */
+export async function requireAdmin(): Promise<AuthUser> {
+  const authUser = await requireAuth();
+  if (authUser.staff.department === "FSE") redirect("/my-calls");
+  if (!authUser.staff.is_admin) redirect("/dashboard");
+  return authUser;
+}

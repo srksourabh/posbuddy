@@ -2,7 +2,15 @@
 
 import { useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
-import { ArrowLeft, MapPin, Phone, Play } from "lucide-react";
+import {
+  ArrowLeft,
+  MapPin,
+  Phone,
+  Play,
+  Navigation,
+  ClipboardCheck,
+  CheckCircle,
+} from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -36,6 +44,10 @@ export function FseCallDetail({ call, closureTemplate }: FseCallDetailProps) {
   const isAssigned = call.call_status === "Assigned";
   const isInProgress = call.call_status === "In Progress";
 
+  const address = [call.contact_address, call.city, call.state]
+    .filter(Boolean)
+    .join(", ");
+
   return (
     <div className="space-y-4">
       {/* Header */}
@@ -51,14 +63,39 @@ export function FseCallDetail({ call, closureTemplate }: FseCallDetailProps) {
             {call.call_ticket_number}
           </p>
         </div>
-        <Badge
-          variant={isInProgress ? "default" : "secondary"}
-        >
+        <Badge variant={isInProgress ? "default" : "secondary"}>
           {call.call_status}
         </Badge>
       </div>
 
-      {/* Actions */}
+      {/* Active visit banner */}
+      {isInProgress && (
+        <div className="bg-primary text-primary-foreground rounded-xl p-4">
+          <div className="flex items-center gap-2 mb-1">
+            <div className="h-2 w-2 rounded-full bg-green-400 animate-pulse" />
+            <span className="text-xs font-medium opacity-80">
+              Visit in progress
+            </span>
+          </div>
+          <p className="text-lg font-bold">
+            {call.merchant_name ?? "Unknown Merchant"}
+          </p>
+          <div className="flex flex-wrap gap-1.5 mt-2">
+            {call.call_type_name && (
+              <span className="text-xs px-2 py-0.5 rounded-md bg-white/20">
+                {call.call_type_name}
+              </span>
+            )}
+            {call.customer_name && (
+              <span className="text-xs px-2 py-0.5 rounded-md bg-white/20">
+                {call.customer_name}
+              </span>
+            )}
+          </div>
+        </div>
+      )}
+
+      {/* Action buttons */}
       <div className="flex gap-2">
         {isAssigned && (
           <Button
@@ -72,28 +109,59 @@ export function FseCallDetail({ call, closureTemplate }: FseCallDetailProps) {
         )}
         {isInProgress && !showClosure && (
           <Button
-            className="flex-1"
+            className="flex-1 bg-green-600 hover:bg-green-700"
             onClick={() => setShowClosure(true)}
           >
-            Close Call
-          </Button>
-        )}
-        {call.contact_phone && (
-          <Button
-            variant="outline"
-            size="icon"
-            asChild
-          >
-            <a href={`tel:${call.contact_phone}`}>
-              <Phone className="h-4 w-4" />
-            </a>
+            <CheckCircle className="mr-2 h-4 w-4" />
+            Complete & Close
           </Button>
         )}
       </div>
 
-      {error && (
-        <p className="text-sm text-destructive">{error}</p>
-      )}
+      {/* Quick actions bar */}
+      <div className="grid grid-cols-3 gap-2">
+        <Button
+          variant="outline"
+          className="flex-col gap-1 h-auto py-3"
+          onClick={() => {
+            window.open(
+              `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(address)}`,
+              "_blank"
+            );
+          }}
+        >
+          <Navigation className="h-5 w-5" />
+          <span className="text-[11px]">Navigate</span>
+        </Button>
+        {call.contact_phone ? (
+          <Button variant="outline" className="flex-col gap-1 h-auto py-3" asChild>
+            <a href={`tel:${call.contact_phone}`}>
+              <Phone className="h-5 w-5" />
+              <span className="text-[11px]">Call</span>
+            </a>
+          </Button>
+        ) : (
+          <Button
+            variant="outline"
+            className="flex-col gap-1 h-auto py-3"
+            disabled
+          >
+            <Phone className="h-5 w-5" />
+            <span className="text-[11px]">Call</span>
+          </Button>
+        )}
+        <Button
+          variant="outline"
+          className="flex-col gap-1 h-auto py-3"
+          onClick={() => setShowClosure(true)}
+          disabled={!isInProgress}
+        >
+          <ClipboardCheck className="h-5 w-5" />
+          <span className="text-[11px]">Close</span>
+        </Button>
+      </div>
+
+      {error && <p className="text-sm text-destructive">{error}</p>}
 
       {/* Closure Form */}
       {showClosure && (
@@ -148,7 +216,17 @@ export function FseCallDetail({ call, closureTemplate }: FseCallDetailProps) {
         </CardHeader>
         <CardContent className="space-y-2 text-sm">
           <InfoRow label="Name" value={call.contact_name} />
-          <InfoRow label="Phone" value={call.contact_phone} />
+          {call.contact_phone && (
+            <div className="flex justify-between">
+              <span className="text-muted-foreground">Phone</span>
+              <a
+                href={`tel:${call.contact_phone}`}
+                className="font-medium text-primary"
+              >
+                {call.contact_phone}
+              </a>
+            </div>
+          )}
         </CardContent>
       </Card>
 

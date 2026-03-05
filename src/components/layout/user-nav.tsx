@@ -1,11 +1,12 @@
 "use client";
 
 import { useRouter } from "next/navigation";
-import { LogOut, User } from "lucide-react";
+import { LogOut, User, Shield } from "lucide-react";
 import { createClient } from "@/lib/supabase/client";
 import { useCurrentUser } from "@/hooks/use-current-user";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
+import { Badge } from "@/components/ui/badge";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -53,15 +54,28 @@ export function UserNav() {
       <DropdownMenuContent align="end" className="w-56">
         <DropdownMenuLabel>
           <p className="text-sm font-medium">{displayName}</p>
-          {staff?.department && (
-            <p className="text-xs text-muted-foreground">{staff.department}</p>
-          )}
+          <div className="flex items-center gap-1.5 mt-0.5">
+            {staff?.department && (
+              <span className="text-xs text-muted-foreground">{staff.department}</span>
+            )}
+            {staff?.is_admin && (
+              <Badge variant="secondary" className="text-[10px] px-1.5 py-0 h-4">
+                Admin
+              </Badge>
+            )}
+          </div>
         </DropdownMenuLabel>
         <DropdownMenuSeparator />
         <DropdownMenuItem disabled>
           <User className="mr-2 h-4 w-4" />
           Profile
         </DropdownMenuItem>
+        {staff?.is_admin && (
+          <DropdownMenuItem onClick={() => router.push("/admin")}>
+            <Shield className="mr-2 h-4 w-4" />
+            Admin Panel
+          </DropdownMenuItem>
+        )}
         <DropdownMenuSeparator />
         <DropdownMenuItem onClick={handleSignOut}>
           <LogOut className="mr-2 h-4 w-4" />

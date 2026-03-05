@@ -21,14 +21,17 @@ export function AppSidebar() {
   const pathname = usePathname();
   const { staff } = useCurrentUser();
   const department = staff?.department ?? "";
+  const isAdmin = staff?.is_admin ?? false;
 
-  // Filter nav groups/items by user's department
+  // Filter nav groups/items by user's department and admin status
   const filteredGroups = navGroups
     .map((group) => ({
       ...group,
-      items: group.items.filter(
-        (item) => !item.roles || item.roles.includes(department)
-      ),
+      items: group.items.filter((item) => {
+        if (item.adminOnly && !isAdmin) return false;
+        if (item.roles && !item.roles.includes(department)) return false;
+        return true;
+      }),
     }))
     .filter((group) => group.items.length > 0);
 
