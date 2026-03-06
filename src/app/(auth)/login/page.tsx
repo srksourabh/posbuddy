@@ -1,7 +1,7 @@
 "use client";
 
-import { useState } from "react";
-import { useRouter } from "next/navigation";
+import { useState, Suspense } from "react";
+import { useRouter, useSearchParams } from "next/navigation";
 import { createClient } from "@/lib/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -10,9 +10,20 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 
 export default function LoginPage() {
+  return (
+    <Suspense fallback={<div className="text-center py-8 text-muted-foreground">Loading...</div>}>
+      <LoginForm />
+    </Suspense>
+  );
+}
+
+function LoginForm() {
   const router = useRouter();
+  const searchParams = useSearchParams();
+  const ssoMessage = searchParams.get("message");
+  const ssoError = searchParams.get("error");
   const [loading, setLoading] = useState(false);
-  const [error, setError] = useState<string | null>(null);
+  const [error, setError] = useState<string | null>(ssoMessage || null);
 
   // Email/Password login
   const [email, setEmail] = useState("");
@@ -212,6 +223,12 @@ export default function LoginPage() {
 
         {error && (
           <p className="mt-4 text-sm text-destructive text-center">{error}</p>
+        )}
+
+        {ssoError && (
+          <p className="mt-2 text-xs text-muted-foreground text-center">
+            Tip: Access POSBUDDY via UDS-HR → Profile → My Projects for automatic login.
+          </p>
         )}
       </CardContent>
     </Card>

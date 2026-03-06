@@ -9,6 +9,7 @@ const BACKOFFICE_ROUTES = [
   "/reports",
   "/master",
   "/settings",
+  "/admin",
 ];
 
 // Routes that only FSE users should access
@@ -44,7 +45,7 @@ export async function updateSession(request: NextRequest) {
 
   const pathname = request.nextUrl.pathname;
 
-  // Allow public routes
+  // Allow public routes (login, auth callback, SSO)
   if (pathname.startsWith("/login") || pathname.startsWith("/auth")) {
     return supabaseResponse;
   }
